@@ -1,0 +1,51 @@
+{
+  "packages": {
+    "required": [
+      "awww",
+      "matugen",
+      "quickshell",
+      "qt6-declarative",
+      "qt6-multimedia",
+      "xdg-utils",
+      "papirus-icon-theme",
+      "ttf-nerd-fonts-symbols",
+      "git",
+      "brightnessctl"
+    ],
+    "source": [
+      "wl-gammarelay-rs"
+    ]
+  },
+
+  "optional": {
+    "wallpapers": {
+      "git": "https://github.com/Bashelle/wallpapers.git",
+      "tag/branch": "main"
+    }
+  },
+
+  "dotfiles": {
+    "hyprland": {
+      "git": "https://github.com/Bashelle/hyprland.git",
+      "tag/branch": "main",
+      "dependencies": [
+        "hyprland",
+        "swappy",
+        "xdg-desktop-portal-hyprland",
+        "grim",
+        "slurp",
+        "fuzzel", 
+        "nautilus",
+        "playerctl"
+      ]
+    },
+    "matugen": {
+      "git": "https://github.com/Bashelle/matugen.git",
+      "tag/branch": "main"
+    },
+    "quickshell": {
+      "git": "https://github.com/Bashelle/quickshell.git",
+      "tag/branch": "main"
+    }
+  }
+}
