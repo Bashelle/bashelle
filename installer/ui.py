@@ -39,13 +39,6 @@ BMAGENTA = "\033[45m"
 BCYAN    = "\033[46m"
 BWHITE   = "\033[47m"
 
-def prompt(label: str, actions: tuple, default=None):
-    while True:
-        agree = input(f"{label}: ") or default
-        
-        if (agree in actions):
-            return agree
-
 def select(title:str, options:tuple, currentIndex=0) -> str:
     hide_cursor()
     
