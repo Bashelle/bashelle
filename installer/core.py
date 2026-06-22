@@ -105,7 +105,6 @@ def install_dotfile(dotfile, name, track=True):
         
         lock_data[name] = {
             "git": dotfile["git"],
-            "tag/branch": dotfile["tag/branch"],
             "commit": revparse.stdout.strip()
         }
 
