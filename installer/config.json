@@ -27,7 +27,7 @@
   "dotfiles": {
     "hyprland": {
       "git": "https://github.com/Bashelle/hyprland.git",
-      "tag/branch": "main",
+      "tag/branch": "v1.0.0",
       "dependencies": [
         "hyprland",
         "swappy",
@@ -41,7 +41,7 @@
     },
     "matugen": {
       "git": "https://github.com/Bashelle/matugen.git",
-      "tag/branch": "main"
+      "tag/branch": "v1.0.1"
     },
     "quickshell": {
       "git": "https://github.com/Bashelle/quickshell.git",
