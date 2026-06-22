@@ -94,7 +94,7 @@ def install():
     if desktop_alias and desktop in dotfiles:
         desktop_data = config["dotfiles"][desktop]
         core.backup(backup_id, path.join(core.config_home, desktop_alias))
-        core.install_dotfile(desktop_data, desktop_alias)
+        core.install_dotfile(desktop_data, desktop_alias, track=False)
 
     for dotfile, data in dotfiles.items():
         if dotfile != desktop and dotfile not in core.supported_desktops:
