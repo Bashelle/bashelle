@@ -90,7 +90,7 @@ def install():
     
     print("\nInstalling dotfiles...")
     
-    # dotfile installation
+    # desktop dotfile installation
     if desktop_alias and desktop in dotfiles:
         desktop_data = config["dotfiles"][desktop]
         core.backup(backup_id, path.join(core.config_home, desktop_alias))
