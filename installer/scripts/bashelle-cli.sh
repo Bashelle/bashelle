@@ -1,7 +1,7 @@
 #!/bin/bash
-bin_path="$HOME/.local/bin/wl-gammarelay-rs"
-source="https://github.com/Bashelle/wl-gammarelay-rs/releases/download/v1.0.1/wl-gammarelay-rs"
-source_hash="63397c33250f0a2700d90b119895502fda2b7dcb5c9e811f0833f9dc55fcf088"
+bin_path="$HOME/.local/bin/bashelle"
+source="https://github.com/Bashelle/cli/releases/download/v0.1.0/bashelle"
+source_hash="63c61a1154f578e255e6b7c3f1469cfc20eb682d82980502fcabac9bab5c1de5"
 
 case "$1" in
     "install")
@@ -22,3 +22,4 @@ case "$1" in
         fi
     ;;
 esac
+

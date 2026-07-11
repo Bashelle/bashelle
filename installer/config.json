@@ -1,4 +1,5 @@
 {
+  "version_name": "v1.0.0-alpha",
   "packages": {
     "required": [
       "awww",
@@ -9,25 +10,27 @@
       "xdg-utils",
       "papirus-icon-theme",
       "ttf-nerd-fonts-symbols",
-      "git",
       "brightnessctl"
     ],
     "source": [
-      "wl-gammarelay-rs"
+      "wl-gammarelay-rs",
+      "bashelle-cli"
     ]
   },
 
   "optional": {
     "wallpapers": {
-      "git": "https://github.com/Bashelle/wallpapers.git",
-      "tag/branch": "main"
+      "source": "https://github.com/Bashelle/wallpapers/archive/97e82d2bb398b0701dc8db928add4d793c46bd2a.tar.gz",
+      "install_path": "~/.config/bashelle/wallpapers"
     }
   },
 
   "dotfiles": {
-    "hyprland": {
-      "git": "https://github.com/Bashelle/hyprland.git",
-      "tag/branch": "v1.0.0",
+    "hypr": {
+      "source": "https://github.com/Bashelle/hyprland/archive/fe9db220ec30c67b45b17186dad205429ed66eb6.tar.gz",
+      "install_path": "~/.config/bashelle/hypr",
+      "version": "1.0.0",
+      "hash": "fe9db220ec30c67b45b17186dad205429ed66eb6",
       "dependencies": [
         "hyprland",
         "swappy",
@@ -40,12 +43,16 @@
       ]
     },
     "matugen": {
-      "git": "https://github.com/Bashelle/matugen.git",
-      "tag/branch": "v1.0.1"
+      "source": "https://github.com/Bashelle/matugen/archive/9e73683ccbc1204349c509d1d225b6987a171710.tar.gz",
+      "version": "1.0.1",
+      "hash": "9e73683ccbc1204349c509d1d225b6987a171710",
+      "install_path": "~/.config/bashelle/matugen"
     },
     "quickshell": {
-      "git": "https://github.com/Bashelle/quickshell.git",
-      "tag/branch": "main"
+      "source": "https://github.com/Bashelle/quickshell/archive/cf113ba799d48efe140e5327a3c050cb4098292b.tar.gz",
+      "hash": "cf113ba799d48efe140e5327a3c050cb4098292b",
+      "version": "1.0.0-alpha",
+      "install_path": "~/.config/bashelle/quickshell"
     }
   }
 }

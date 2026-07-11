@@ -39,7 +39,7 @@ BMAGENTA = "\033[45m"
 BCYAN    = "\033[46m"
 BWHITE   = "\033[47m"
 
-def select(title:str, options:tuple, currentIndex=0) -> str:
+def select(title:str, options, currentIndex=0) -> int:
     hide_cursor()
     
     # stdin id
@@ -50,8 +50,7 @@ def select(title:str, options:tuple, currentIndex=0) -> str:
     menu_size = len(options) + 2 if title else len(options)
 
     while True:
-        if title:
-            sys.stdout.write(f"\r\n{title}\n")
+        if title: sys.stdout.write(f"\r\n{title}\n")
 
         for i, option in enumerate(options):
             big_boy = max(options, key=len)
@@ -87,7 +86,7 @@ def select(title:str, options:tuple, currentIndex=0) -> str:
     termios.tcsetattr(fileno, termios.TCSADRAIN, old_buffer)
     show_cursor()
     print()
-    return options[currentIndex]
+    return currentIndex
 
 # just a spinner
 def spinner(label, target, *args, **kargs):
@@ -112,13 +111,10 @@ def spinner(label, target, *args, **kargs):
         sys.stdout.write(f"{GREEN}{IOK}{RESET} {DIM}{label}{RESET}\n")
         return result
     except Exception as e:
-        sys.stdout.write(f"{RED}{IFAIL}{RESET} {label}\n")
-        stderr = getattr(e, "stderr", None)
-        
-        if stderr:
-            print(e.stderr)
+        sys.stdout.write(f"{RED}{IFAIL}{RESET} {DIM}{label}{RESET}\n")            
+        print(e)
 
-        return None
+        return []
     finally:
         sys.stdout.write("\033[?25h")
         sys.stdout.flush()

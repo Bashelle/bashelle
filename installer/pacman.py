@@ -26,7 +26,7 @@ def package_exists(pkg) -> bool:
     return process.returncode == 0
 
 # get the missing dependences
-def check_packages(pacman, source):
+def check_packages(pacman, source) -> tuple:
     bin_path=path.join(core.local_home, "bin")
     missing_source=[]
     missing_pacman=[]
@@ -55,3 +55,12 @@ def remove(pkgs) -> None:
             stderr=subprocess.DEVNULL,
             check=True
         )
+
+# It has nothing to do with 'pacman' but fits here anyways
+def install_from_source(name):
+    script_path = path.join(core.script_dir, name) 
+
+    if path.exists(script_path):
+        subprocess.run([script_path, "install"], check=True)
+    else:
+        raise Exception(f"{ui.RED}{ui.IFAIL}{ui.RESET} '{name}' script doesn't exist! Skipping...") 

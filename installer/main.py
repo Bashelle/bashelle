@@ -1,31 +1,47 @@
-from os import path, environ, mkdir, system
-from collections import deque
 from datetime import datetime
+from os import path
+from urllib.parse import urlparse
+from pathlib import Path
 
-import traceback
-import sys
-from time import sleep
-import json
+import shutil
 import subprocess
 import core
 import ui
 import os
+import tarfile
 import pacman
-
-config = core.load_config(path.join(core.base_dir, "config.json"))
+import json
 
 def greet():
     print(core.logo)
     print(f"Use {ui.IUP} {ui.IDOWN} to navigate")
-    print(f"[Enter] to choose an option")
-    print(f"[Ctrl+C] to close")
+    print("[Enter] to choose an option")
+    print("[Ctrl+C] to close")
+
+# Loads config.json file
+def load_config(file):
+    if not path.isfile(file): 
+        return None
+    
+    with open(file, "r") as f:
+        return json.load(f)
+
 
 # Run some commands before installation
 def before_install():
     current_desktop = os.environ.get("XDG_CURRENT_DESKTOP")
 
     if core.os_release() != "arch":
-        raise Exception("this script only works on arch based distros :(")
+        print("this script only works on arch based distros :(")
+        exit(1)
+
+    scripts_path = Path(core.script_dir)
+
+    print("\nBefore anything happens, there is some scripts which may require permissions. (see scripts folder)")
+    if ui.select("Grant permissions?", options=["Yes", "No"]) == 0:
+        for path in scripts_path.iterdir():
+            subprocess.run(["chmod", "+x", path])
+    else: exit(0)
 
     match current_desktop:
         case "Hyprland":
@@ -33,116 +49,150 @@ def before_install():
                 ["hyprctl", "eval", "hl.config({ misc = { disable_autoreload = true } })"],
                 stdout=subprocess.DEVNULL
             )
-    
-def install():
-    select_options = list(core.supported_desktops.keys()) + ["No thanks, i got my owns"]
 
-    desktop = ui.select(title="Select target desktop dotfile:", options=select_options)
-    desktop_alias = core.supported_desktops.get(desktop, "")
-    dotfiles = config["dotfiles"]
+def select_desktop():
+    desktop_options = list(core.supported_desktops.keys()) + ["No thanks, i got my owns"]
+    select_option = ui.select(title="Select target desktop dotfile:", options=desktop_options)
+    return core.supported_desktops.get(desktop_options[select_option], None)
 
-    required_packages = config["packages"]["required"]
-    
-    if desktop_alias:
-        required_packages += dotfiles[desktop]["dependencies"]
-    else:
-        ui.select(
-            title="Tip: check documentation to know how to call some shortcuts in your desktop files!", 
-            options=("Ok",)
-        )
-
-    dotfiles = config["dotfiles"]
-    
-    
-    # Package installation
-    pacman_packages, source_packages = ui.spinner(
+def install_dependencies(required_packages, source_packages):
+    required_packages, source_packages = ui.spinner(
         "Checking packages...", 
         pacman.check_packages, 
-        required_packages,
-        config["packages"]["source"]
+        required_packages, 
+        source_packages
     )
 
-    if pacman_packages or source_packages:
-        print("\nThe script will install the following packages")
-
-        if pacman_packages:
-            for pkg in pacman_packages: print("*", f"{ui.DIM} {pkg}{ui.RESET}")
-
-        if source_packages:
-            for pkg in source_packages: print("*", f"{ui.DIM} {pkg}{ui.RESET}")
-
-        if ui.select("Do you agree?", ("Yes", "No")) == "Yes":
-            if pacman_packages: pacman.install(pacman_packages)
-
+    if required_packages or source_packages:
+        print("This script will install the following packages:")
+        
+        for pkg in required_packages + source_packages: print(" L", pkg)
+        
+        if ui.select("Do you agree?", options=("yes", "no")) == 0:
+            if required_packages: pacman.install(required_packages)
+        
             if source_packages:
                 for pkg in source_packages:
-                    script=path.join(core.script_dir, f"{pkg}.sh")
+                    ui.spinner(f"Installing '{pkg}' from script", pacman.install_from_source, f"{pkg}.sh")
 
-                    if path.isfile(script): 
-                        subprocess.run([script, "install"])
-                        print(f"{ui.GREEN}{ui.IOK}{ui.RESET} {pkg}")
-                    else:                    
-                        print(f"{ui.RED}{ui.IFAIL}{ui.RESET} '{pkg}.sh' script not found. Skipping...")
-        else: sys.exit(0)
-    
-    # Backup
-    backup_id=datetime.now().strftime("%Y%m%d%f")
-    
-    print("\nInstalling dotfiles...")
-    
-    # desktop dotfile installation
-    if desktop_alias and desktop in dotfiles:
-        desktop_data = config["dotfiles"][desktop]
-        core.backup(backup_id, path.join(core.config_home, desktop_alias))
-        core.install_dotfile(desktop_data, desktop_alias, track=False)
+def backup(name):
+    source     = path.join(core.config_home, "bashelle")
+    backup_dir = path.join(core.config_home, "bashelle", ".recovery", f"{name}")
 
-    for dotfile, data in dotfiles.items():
-        if dotfile != desktop and dotfile not in core.supported_desktops:
-            core.backup(backup_id, path.join(core.config_home, dotfile))
-            core.install_dotfile(data, dotfile)
+    shutil.copytree(
+        source, 
+        backup_dir,
+        ignore=shutil.ignore_patterns(".recovery", "wallpapers")
+    )
+
+def install_dotfile(source, install_path):
+    install_path = path.expanduser(install_path)
+    
+    os.makedirs(install_path, exist_ok=True)
+    os.makedirs("/tmp/bashelle", exist_ok=True)
+    
+    filename = path.basename(urlparse(source).path)
+    tmp = path.join("/tmp", "bashelle", filename)
+    
+    subprocess.run(["curl", "-sL", "-o", tmp, source], check=True)
+
+    with tarfile.open(tmp, "r:*") as tar:
+        members = []
+        
+        for member in tar.getmembers():
+            path_frag = member.name.split("/")
+            
+            if len(path_frag) > 1:
+                member.name = os.path.join(*path_frag[1:])
+                members.append(member)
+        
+        tar.extractall(path=install_path, members=members)
 
 def post_install():
-    current_desktop = os.environ.get("XDG_CURRENT_DESKTOP")
+    current_desktop = os.environ.get("XDG_CURRENT_DESKTOP", "")
 
-    ui.spinner("Starting  'awww-daemon'...", core.start_daemons, ["awww-daemon"])
-    
-    if ui.select("Do you want to add custom wallpapers? (⚠️ some weeb wallpapers)", options=("Yes, please", "Nope")) == "Yes, please":
-        wallpaper = path.join(core.config_home, "bashelle", "wallpapers", "wallpaper4.jpg")
-        core.install_dotfile(config["optional"]["wallpapers"], "wallpapers", track=False)
-        
-        # sets the wallpapers
-        subprocess.run(["awww", "img", wallpaper])
-    
-    subprocess.run(
-        ["matugen", "color", "hex", "#ed8796"], 
-        stderr=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL
-    )
-    
     match current_desktop:
         case "Hyprland":
             subprocess.run(
-                ["hyprctl", "eval", "hl.config({ misc = { disable_autoreload = false } })"],
+                ["hyprctl", "eval",
+                    "hl.config({ misc = { disable_autoreload = false } })"],
                 stdout=subprocess.DEVNULL
             )
-            subprocess.run(["hyprctl", "reload"])
-    
-    ui.spinner("Starting  'quickshell'...", core.start_daemons, ["qs"])
-    print(f"\n{ui.GREEN}{ui.IOK}{ui.RESET} installation completed!")
-        
-commands = deque([
-    before_install, 
-    greet,
-    install,
-    post_install
-])
+            subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL)
 
-if config is not None:
-    while commands:
-        command = commands.popleft()       
-        try: command()
-        except Exception as e:
-            print(f"\n{traceback.format_exc()}\n{e}")
-            sys.exit(0)
-else: 
-    print(f"\n{ui.RED}Config file not found!{ui.RESET}")
+config = core.load_config(path.join(core.base_dir, "config.json"))
+
+if config:
+    required_packages = config["packages"]["required"]
+    source_packages   = config["packages"]["source"]
+    
+    greet()
+    before_install()
+    target_desktop = select_desktop()
+    
+    if target_desktop:
+        required_packages += config["dotfiles"][target_desktop]["dependencies"]
+    else:
+        ui.select(title="Tip: See docs to know how to call shortcuts", options=("Ok",))
+
+    install_dependencies(
+        required_packages=required_packages, 
+        source_packages=source_packages
+    )
+
+    # Creates a backup
+    backup_name = datetime.now().strftime("installer_%Y%m%d_%H%M%S_%f")
+    backup(backup_name)
+
+    dotfiles = {
+        dotfile: data for dotfile, data in config["dotfiles"].items()
+        if dotfile not in core.supported_desktops.values() or dotfile == target_desktop
+    }
+
+    lock_data = {
+        "versions": {}
+    }
+
+    for dotfile, data in dotfiles.items():
+        if dotfile not in core.supported_desktops.values():
+            lock_data["versions"][dotfile] = {
+                "hash":         data["hash"],
+                "source":       data["source"],
+                "install_path": data["install_path"],
+                "version":      data["version"],
+            }
+        
+        ui.spinner(
+            f"Installing '{dotfile}'...",
+            install_dotfile,
+            source=data["source"],
+            install_path=data["install_path"]
+        )
+    
+    # Write the lock-json
+    lock_path = path.join(core.config_home, "bashelle", ".versions-lock.json")
+
+    with open(lock_path, "w") as lock:
+        json.dump(lock_data, lock, indent=2)
+
+    # Starts the awww-daemon
+    subprocess.run(["awww-daemon"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+    # Generate matugen colors
+    subprocess.run(["matugen", "color", "#ed8796"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+    if ui.select("Do you want to add custom wallpapers? (⚠️ some weeb wallpapers)", options=("Yes, please", "Nope")) == 0:
+        wallpaper = path.join(core.config_home, "bashelle","wallpapers", "wallpaper4.jpg")
+        
+        ui.spinner(
+            "Installing wallpapers...", 
+            install_dotfile,
+            source=config["optional"]["wallpapers"]["source"],
+            install_path=config["optional"]["wallpapers"]["install_path"]
+        )
+
+        # sets the wallpapers
+        subprocess.run(["awww", "img", wallpaper])
+
+    post_install()
+    print("\nBashelle has been installed succesfully!")
