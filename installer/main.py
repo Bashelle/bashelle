@@ -122,6 +122,7 @@ if config:
     else:
         ui.select(title="Tip: See docs to know how to call shortcuts", options=("Ok",))
 
+    print("Required packages:")
     install_dependencies(required_packages)
 
     # Creates a backup
@@ -136,6 +137,8 @@ if config:
     lock_data = {
         "versions": {}
     }
+
+    print("\nSource files:")
 
     for file, data in source.items():
         if file not in core.supported_desktops.values():
