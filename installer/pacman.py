@@ -26,22 +26,15 @@ def package_exists(pkg) -> bool:
     return process.returncode == 0
 
 # get the missing dependences
-def check_packages(pacman, source) -> tuple:
+def check_packages(pacman) -> list:
     bin_path=path.join(core.local_home, "bin")
-    missing_source=[]
-    missing_pacman=[]
+    missing_packages=[]
     
     for pkg in pacman:
         exists = package_exists(pkg)
-        if not exists: missing_pacman.append(pkg)
+        if not exists: missing_packages.append(pkg)
 
-    for pkg in source:
-        exists = path.exists(f"{bin_path}/{pkg}") or shutil.which(pkg) is not None
-        
-        if not exists:
-            missing_source.append(pkg)
-
-    return missing_pacman, missing_source
+    return missing_packages
 
 # remove a list of packages
 def remove(pkgs) -> None:

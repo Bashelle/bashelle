@@ -1,22 +1,16 @@
 {
   "version_name": "v1.0.0-alpha",
-  "packages": {
-    "required": [
-      "awww",
-      "matugen",
-      "quickshell",
-      "qt6-declarative",
-      "qt6-multimedia",
-      "xdg-utils",
-      "papirus-icon-theme",
-      "ttf-nerd-fonts-symbols",
-      "brightnessctl"
-    ],
-    "source": [
-      "wl-gammarelay-rs",
-      "bashelle-cli"
-    ]
-  },
+  "packages": [
+    "awww",
+    "matugen",
+    "quickshell",
+    "qt6-declarative",
+    "qt6-multimedia",
+    "xdg-utils",
+    "papirus-icon-theme",
+    "ttf-nerd-fonts-symbols",
+    "brightnessctl"
+  ],
 
   "optional": {
     "wallpapers": {
@@ -25,12 +19,12 @@
     }
   },
 
-  "dotfiles": {
+  "source": {
     "hypr": {
       "source": "https://github.com/Bashelle/hyprland/archive/fe9db220ec30c67b45b17186dad205429ed66eb6.tar.gz",
       "install_path": "~/.config/bashelle/hypr",
       "version": "1.0.0",
-      "hash": "fe9db220ec30c67b45b17186dad205429ed66eb6",
+      "commit": "fe9db220ec30c67b45b17186dad205429ed66eb6",
       "dependencies": [
         "hyprland",
         "swappy",
@@ -42,15 +36,31 @@
         "playerctl"
       ]
     },
+
+    "wl-gammarelay-rs": {
+      "source": "https://github.com/Bashelle/wl-gammarelay-rs/releases/download/v1.0.1/wl-gammarelay-rs.tar.gz",
+      "version": "1.0.1",
+      "commit": "9874e4a273a01f60e578a896183d67aa7a23572c",
+      "install_path": "~/.local/bin"
+    },
+
+    "bashelle-cli": {
+      "source": "https://github.com/Bashelle/cli/releases/download/v0.1.0/bashelle.tar.gz",
+      "version": "0.1.0",
+      "commit": "d315565036a517bc2ad46c6fcfc898ed09a56375",
+      "install_path": "~/.local/bin"
+    },
+
     "matugen": {
       "source": "https://github.com/Bashelle/matugen/archive/9e73683ccbc1204349c509d1d225b6987a171710.tar.gz",
       "version": "1.0.1",
-      "hash": "9e73683ccbc1204349c509d1d225b6987a171710",
+      "commit": "9e73683ccbc1204349c509d1d225b6987a171710",
       "install_path": "~/.config/bashelle/matugen"
     },
+    
     "quickshell": {
       "source": "https://github.com/Bashelle/quickshell/archive/cf113ba799d48efe140e5327a3c050cb4098292b.tar.gz",
-      "hash": "cf113ba799d48efe140e5327a3c050cb4098292b",
+      "commit": "cf113ba799d48efe140e5327a3c050cb4098292b",
       "version": "1.0.0-alpha",
       "install_path": "~/.config/bashelle/quickshell"
     }

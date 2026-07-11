@@ -35,13 +35,6 @@ def before_install():
         print("this script only works on arch based distros :(")
         exit(1)
 
-    scripts_path = Path(core.script_dir)
-
-    print("\nBefore anything happens, there is some scripts which may require permissions. (see scripts folder)")
-    if ui.select("Grant permissions?", options=["Yes", "No"]) == 0:
-        for path in scripts_path.iterdir():
-            subprocess.run(["chmod", "+x", path])
-    else: exit(0)
 
     match current_desktop:
         case "Hyprland":
@@ -55,26 +48,21 @@ def select_desktop():
     select_option = ui.select(title="Select target desktop dotfile:", options=desktop_options)
     return core.supported_desktops.get(desktop_options[select_option], None)
 
-def install_dependencies(required_packages, source_packages):
-    required_packages, source_packages = ui.spinner(
+def install_dependencies(required_packages):
+    required_packages = ui.spinner(
         "Checking packages...", 
         pacman.check_packages, 
-        required_packages, 
-        source_packages
+        required_packages
     )
 
-    if required_packages or source_packages:
+    if required_packages:
         print("This script will install the following packages:")
         
-        for pkg in required_packages + source_packages: print(" L", pkg)
+        for pkg in required_packages: print(" L", pkg)
         
         if ui.select("Do you agree?", options=("yes", "no")) == 0:
             if required_packages: pacman.install(required_packages)
         
-            if source_packages:
-                for pkg in source_packages:
-                    ui.spinner(f"Installing '{pkg}' from script", pacman.install_from_source, f"{pkg}.sh")
-
 def backup(name):
     source     = path.join(core.config_home, "bashelle")
     backup_dir = path.join(core.config_home, "bashelle", ".recovery", f"{name}")
@@ -85,7 +73,7 @@ def backup(name):
         ignore=shutil.ignore_patterns(".recovery", "wallpapers")
     )
 
-def install_dotfile(source, install_path):
+def install_from_source(source, install_path):
     install_path = path.expanduser(install_path)
     
     os.makedirs(install_path, exist_ok=True)
@@ -123,29 +111,25 @@ def post_install():
 config = core.load_config(path.join(core.base_dir, "config.json"))
 
 if config:
-    required_packages = config["packages"]["required"]
-    source_packages   = config["packages"]["source"]
+    required_packages = config["packages"]
     
     greet()
     before_install()
     target_desktop = select_desktop()
     
     if target_desktop:
-        required_packages += config["dotfiles"][target_desktop]["dependencies"]
+        required_packages += config["source"][target_desktop]["dependencies"]
     else:
         ui.select(title="Tip: See docs to know how to call shortcuts", options=("Ok",))
 
-    install_dependencies(
-        required_packages=required_packages, 
-        source_packages=source_packages
-    )
+    install_dependencies(required_packages)
 
     # Creates a backup
     backup_name = datetime.now().strftime("installer_%Y%m%d_%H%M%S_%f")
     backup(backup_name)
 
-    dotfiles = {
-        dotfile: data for dotfile, data in config["dotfiles"].items()
+    source = {
+        dotfile: data for dotfile, data in config["source"].items()
         if dotfile not in core.supported_desktops.values() or dotfile == target_desktop
     }
 
@@ -153,18 +137,18 @@ if config:
         "versions": {}
     }
 
-    for dotfile, data in dotfiles.items():
-        if dotfile not in core.supported_desktops.values():
-            lock_data["versions"][dotfile] = {
-                "hash":         data["hash"],
+    for file, data in source.items():
+        if file not in core.supported_desktops.values():
+            lock_data["versions"][file] = {
+                "commit":       data["commit"],
                 "source":       data["source"],
                 "install_path": data["install_path"],
                 "version":      data["version"],
             }
         
         ui.spinner(
-            f"Installing '{dotfile}'...",
-            install_dotfile,
+            f"Installing '{file}'...",
+            install_from_source,
             source=data["source"],
             install_path=data["install_path"]
         )
@@ -186,7 +170,7 @@ if config:
         
         ui.spinner(
             "Installing wallpapers...", 
-            install_dotfile,
+            install_from_source,
             source=config["optional"]["wallpapers"]["source"],
             install_path=config["optional"]["wallpapers"]["install_path"]
         )
