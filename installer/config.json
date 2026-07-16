@@ -27,6 +27,7 @@
       "commit": "fe9db220ec30c67b45b17186dad205429ed66eb6",
       "dependencies": [
         "hyprland",
+        "kitty",
         "swappy",
         "xdg-desktop-portal-hyprland",
         "grim",
