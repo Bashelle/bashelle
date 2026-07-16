@@ -1,7 +1,6 @@
 import ui
 import subprocess
 import core
-import shutil
 
 from os import path
 
@@ -27,7 +26,6 @@ def package_exists(pkg) -> bool:
 
 # get the missing dependences
 def check_packages(pacman) -> list:
-    bin_path=path.join(core.local_home, "bin")
     missing_packages=[]
     
     for pkg in pacman:
@@ -35,19 +33,6 @@ def check_packages(pacman) -> list:
         if not exists: missing_packages.append(pkg)
 
     return missing_packages
-
-# remove a list of packages
-def remove(pkgs) -> None:
-    subprocess.run(["sudo", "-v"])
-    for pkg in pkgs:
-        cmd = ["sudo","pacman", "-Rns", "--noconfirm", pkg]            
-        ui.spinner(
-            f"{pkg}", 
-            subprocess.run, cmd,
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
 
 # It has nothing to do with 'pacman' but fits here anyways
 def install_from_source(name):

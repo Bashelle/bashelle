@@ -40,13 +40,3 @@ def load_config(file):
     
     with open(file, "r") as f:
         return json.load(f)
-
-def backup(name):
-    source = path.join(config_home, "bashelle")
-    backup_dir = path.join(config_home, "bashelle", ".recovery", f"{name}")
-
-    shutil.copytree(
-        source, 
-        backup_dir,
-        ignore=shutil.ignore_patterns(".recovery")
-    )

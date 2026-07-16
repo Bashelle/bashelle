@@ -1,8 +1,6 @@
 import sys
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from time import sleep
-import keyword
 
 import tty
 import termios
