@@ -1,7 +1,6 @@
 from datetime import datetime
 from os import path
 from urllib.parse import urlparse
-from pathlib import Path
 
 import shutil
 import subprocess
@@ -35,7 +34,6 @@ def before_install():
         print("this script only works on arch based distros :(")
         exit(1)
 
-
     match current_desktop:
         case "Hyprland":
             subprocess.run(
@@ -67,6 +65,8 @@ def backup(name):
     source     = path.join(core.config_home, "bashelle")
     backup_dir = path.join(core.config_home, "bashelle", ".recovery", f"{name}")
 
+    os.makedirs(source, exist_ok=True)
+    
     shutil.copytree(
         source, 
         backup_dir,
@@ -74,7 +74,7 @@ def backup(name):
     )
 
 def install_from_source(source, install_path):
-    install_path = path.expanduser(install_path)
+    install_path  = path.expanduser(install_path)
     
     os.makedirs(install_path, exist_ok=True)
     os.makedirs("/tmp/bashelle", exist_ok=True)
@@ -95,6 +95,7 @@ def install_from_source(source, install_path):
                 members.append(member)
         
         tar.extractall(path=install_path, members=members)
+
 
 def post_install():
     current_desktop = os.environ.get("XDG_CURRENT_DESKTOP", "")
@@ -163,10 +164,10 @@ if config:
         json.dump(lock_data, lock, indent=2)
 
     # Starts the awww-daemon
-    subprocess.run(["awww-daemon"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.Popen(["awww-daemon"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, start_new_session=True)
 
     # Generate matugen colors
-    subprocess.run(["matugen", "color", "#ed8796"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.run(["matugen", "color","hex" ,"#ed8796"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     if ui.select("Do you want to add custom wallpapers? (⚠️ some weeb wallpapers)", options=("Yes, please", "Nope")) == 0:
         wallpaper = path.join(core.config_home, "bashelle","wallpapers", "wallpaper4.jpg")
@@ -180,6 +181,25 @@ if config:
 
         # sets the wallpapers
         subprocess.run(["awww", "img", wallpaper])
+
+    # Create symlinks
+    symlink_targets = ["hypr", "matugen", "quickshell"]
+
+    for file, data in source.items():
+        target = path.expanduser(path.join(core.config_home, file))
+        source = path.expanduser(data["install_path"])
+        
+        if file in symlink_targets:
+            if path.islink(target):
+                os.remove(target)
+
+            if path.isdir(target):
+                shutil.rmtree(target)
+
+            os.symlink(source, target)
+            
+
+    subprocess.Popen(["qs"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, start_new_session=True)
 
     post_install()
     print("\nBashelle has been installed succesfully!")
